@@ -1,0 +1,45 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["mongodb"]
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique
+  verified  Boolean  @default(false)
+  token     String? // Optional, you might use it for magic link authentication
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  rooms     Room[] // One-to-many relation: User can have multiple Rooms
+}
+
+model Room {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String   @unique
+  description String?
+  slug        String   @unique
+  taskCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String   @db.ObjectId // Foreign key to User
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks       Task[] // One-to-many relation: Room can have multiple Tasks
+}
+
+model Task {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  priority    String // Example: 'high', 'medium', 'low'
+  completed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  roomId      String   @db.ObjectId // Foreign key to Room
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
